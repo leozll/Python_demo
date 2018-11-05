@@ -1,0 +1,8 @@
+{
+	"PV": {
+		"CareerLevel" : "case when CHARINDEX('.',prop_careerlevel)>0 then left(prop_careerlevel,CHARINDEX('.', prop_careerlevel)-1) else prop_careerlevel end",
+		"ConsultantNumber" : "REPLACE(prop_ConsultantNumber,'cn','')",
+		"Activitystatus" : "upper(prop_activitystatus)"
+
+  }
+}

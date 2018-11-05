@@ -1,0 +1,13 @@
+{
+	"threads": {
+		"comments" : "定义线程个数count",
+		"count" : 4
+
+  },
+	"jdconfig": {
+		"homepage" : "http://list.jd.com/list.html?cat=9987,653,655&page=1&trans=1&JL=6_0_0#J_main",
+		"listdir" : "./downloads/listhtml/",
+		"productdir" : "./downloads/producthtml/",
+		"jdcookie" : "__jdc=122270672; __jda=122270672.1360558993.1482981002448.1484013745.1484028631.8; __jdv=122270672|jdzt_refer_null|t_108549027_1|jzt-zhitou|t5ngywhxaual4sls7c5q|1483497615808; __jdu=1360558993; ipLoc-djd=1-72-4137-0; areaId=1; listck=520709493c793a749249447ae85c3fe6"
+  }
+}

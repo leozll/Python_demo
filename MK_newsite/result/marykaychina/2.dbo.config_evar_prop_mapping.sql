@@ -1,0 +1,1 @@
+INSERT INTO [dbo].[config_evar_prop_mapping] ([Site], [OrginalColumn], [BusinessName], [StartTime], [EndTime], [EventColumn], [PVColumn], [PVSource], [PVTarget]) VALUES ('marykaychina','prop6','site', CAST(N'2010-01-01 00:00:00.000' AS DateTime), CAST(N'2999-01-01 00:00:00.000' AS DateTime),1,1,'prop_site','site');

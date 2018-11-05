@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+{% load crispy_forms_tags %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link rel="stylesheet" href="/static/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="/static/success.css" type="text/css">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script type="text/javascript" src="http://cdn.hcharts.cn/jquery/jquery-1.8.3.min.js"></script>
+    <script src="http://cdn.hcharts.cn/highcharts/highcharts.js"></script>
+    <script src="http://cdn.hcharts.cn/highcharts/modules/exporting.js"></script>
+    <script src="/static/springy.js"></script>
+    <script src="/static/springyui.js"></script>
+    <script type="text/javascript">
+$(function () {
+    $('#id_diffusion').highcharts({
+        chart: {
+                type: {{Type|safe}},
+                backgroundColor: "rgba(0,0,0,0)"
+            },
+        title: {
+            text: {{Title|safe}},
+            x: -20 //center
+        },
+        subtitle: {
+            x: -20
+        },
+        xAxis: {
+            categories: {{List|safe}},
+            title: {
+                text: {{xTitle|safe}}
+            },
+        },
+        yAxis: {
+            title: {
+                text: '转发数量(个)'
+            },
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }]
+        },
+        plotOptions: {
+            line: {
+                dataLabels: {
+                    enabled: true
+                }
+            }
+        },
+        tooltip: {
+            valueSuffix: '个'
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            borderWidth: 0
+        },
+        series: [{
+            name: '转发数',
+            data: {{Count}},
+            color: '#06C'
+        }],
+        credits: {
+          enabled:false
+		}
+    });
+});
+    </script>
+	<script>
+var graph = new Springy.Graph();
+
+{% for n in nodeList %}
+var {{ n.0|safe }} = graph.newNode({label: "{{ n.1|safe|lower|capfirst }}" ,color: "{{ n.2|safe }}", ondoubleclick: function() { document.getElementById("id_shareIdInfo").innerHTML={{ n.3 | safe | linebreaksbr }}; }});
+{% endfor %}
+
+{% for l in relList %}
+graph.newEdge({{ l|first }}, {{ l|last }},{color: '#06C', label: 'Diffusion to'});
+{% endfor %};
+
+jQuery(function(){
+  var springy = window.springy = jQuery('#id_shareIdDiff').springy({
+    graph: graph,
+    nodeSelected: function(node){
+      console.log('Node selected: ' + JSON.stringify(node.data));
+    }
+  });
+});
+	</script>
+    <title>查询</title> 
+</head>
+<body height="100%">
+    <h3>
+		<a href="/login" style="text-decoration:none">返回主页</a>
+		<p style="float:right"><a href="/logout" style="text-decoration:none；float:right;">退出</a></p>
+	</h3>
+    <div id="id_formDiv">{% crispy uf %}</div>
+    <fieldset>
+		<div for="id_diffCount">{{diffCount}}</div>
+		<div for="id_depthDiffusion1">{{depthDiffusion|linebreaks}}</div>
+		<div for="id_depthDiffusion2">{{spanDiffusion|linebreaks}}</div>
+		<div id="id_diffusion"></div>
+    </fieldset>
+    <canvas style="display: block" id="id_shareIdDiff"  width="1150" height={{canvasHeight|default:"0"}} >
+    </canvas>
+    <fieldset>
+		<div style="display: block" id="id_shareIdInfo"  width="1150" height="20" ><!-- -->&nbsp
+		</div>
+	</fieldset>
+</body>
+</html>

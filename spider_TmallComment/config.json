@@ -1,0 +1,19 @@
+{
+	"threads": {
+		"comments" : "定义线程个数count",
+		"count" : 4
+
+  },
+	"jdconfig": {
+		"homepage" : "http://list.jd.com/list.html?cat=9987,653,655&page=1&trans=1&JL=6_0_0#J_main",
+		"listdir" : "./downloads/listhtml/",
+		"productdir" : "./downloads/producthtml/",
+		"jdcookie" : "__jdc=122270672; __jda=122270672.1360558993.1482981002448.1484013745.1484028631.8; __jdv=122270672|jdzt_refer_null|t_108549027_1|jzt-zhitou|t5ngywhxaual4sls7c5q|1483497615808; __jdu=1360558993; ipLoc-djd=1-72-4137-0; areaId=1; listck=520709493c793a749249447ae85c3fe6"
+  }
+	"tbconfig": {
+		"homepage" : "https://s.taobao.com/search?q=%E8%88%92%E6%80%A1%E9%98%B2%E6%99%92%E9%9C%9CSPF20&imgfile=&commend=all&ssid=s5-e&search_type=item&sourceId=tb.index&spm=a21bo.50862.201856-taobao-item.1&ie=utf8&initiative_id=tbindexz_20170116",
+		"listdir" : "./downloads/listhtml/",
+		"productdir" : "./downloads/producthtml/",
+		"tbcookie" : "t=0f95c5746a1375e484367ecf1946231a; cna=sZzrEOCZazwCAWVRguc+e4h0; l=AlRUAfeR2XfACGxwjYJIs3S3pJzGNnhz; isg=AjIyaXdXvjH-SYIU3AR5Y8gXmniyIjZdOPw5JvwLxeU0j9KJ5lOGbTilKZbO; thw=cn; _m_h5_tk=0d8c7e8667af1bd132b198a38b27ecf5_1484206043778; _m_h5_tk_enc=86b961f154110116adc5d17cd0e2541d; mt=ci%3D-1_0; cookie2=3c317ef0f57c56873dd66e14ffff59b5; v=0; _tb_token_=LogAdCGgUS9n; JSESSIONID=7968D88DD19A40A9F148F2CB6EE7D4F8; alitrackid=www.taobao.com; lastalitrackid=www.taobao.com"
+  }
+}

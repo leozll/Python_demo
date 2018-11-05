@@ -1,0 +1,45 @@
+# -*- coding: utf-8 -*-
+# -*- author: Charlie -*-
+
+import urllib2
+import time
+
+# 设置总页数
+totalPageNum = 92
+
+# 设置文件存放目录
+filePath = 'D:\MobileInfo\JingDong\PhoneListPage'
+
+
+# 手动设置cookie信息
+class SimpleCookieHandler(urllib2.BaseHandler):
+    def http_request(self, req):
+        simple_cookie = '__jdv=122270672|direct|-|none|-|1483413250566; areaId=1; listck=ca2110979103a463f705eae071456ed9; ipLoc-djd=1-72-4137-0; ipLocation=%u5317%u4EAC; __jda=122270672.1483413250565621907624.1483413251.1483421384.1484029008.3; __jdb=122270672.1.1483413250565621907624|3.1484029008; __jdc=122270672; __jdu=1483413250565621907624'
+        if not req.has_header('Cookie'):
+            req.add_unredirected_header('Cookie', simple_cookie)
+        else:
+            cookie = req.get_header('Cookie')
+            req.add_unredirected_header('Cookie', simple_cookie + '; ' + cookie)
+        return req
+
+# 获取当前页码，手机list信息
+def getPageInfo(pageNum):
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(), SimpleCookieHandler())
+    req = urllib2.Request("http://list.jd.com/list.html?cat=9987,653,655&page=" + str(pageNum) + "&trans=1&JL=6_0_0#J_main")
+    html = opener.open(req, timeout=20).read()
+
+
+
+    print html
+    # 将html信息写入txt文件
+    # thisFilePath = filePath + "\\" + str(pageNum) + ".txt"
+    # f = open(thisFilePath, 'w')
+    #
+    # f.write(html)
+    # f.close()
+
+getPageInfo(50)
+
+# for i in range(0, totalPageNum):
+#     getPageInfo(i+1)
+#     time.sleep(5)

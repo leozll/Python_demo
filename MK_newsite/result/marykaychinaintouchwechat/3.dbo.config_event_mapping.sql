@@ -1,0 +1,1 @@
+INSERT [dbo].[config_event_mapping] ([Site], [OrginalColumn], [BusinessName], [StartTime], [EndTime]) VALUES ('marykaychinaintouchwechat','event22','Share', CAST(N'2010-01-01 00:00:00.000' AS DateTime), CAST(N'2999-01-01 00:00:00.000' AS DateTime));
