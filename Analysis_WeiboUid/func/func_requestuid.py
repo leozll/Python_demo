@@ -1,15 +1,19 @@
 #  -*-  coding:  UTF-8  -*-
-#from func.code import requests
 import requests
-def get_uid():
+import json
 
-    # 请求示例 url 默认请求参数已经做URL编码
-    url = "http://api01.idataapi.cn:8000/profile/weibo?pageToken=1&type=1&url=https%3A%2F%2Fweibo.com%2Fchcedo&apikey=GcqZA9GII0aGoyx83eOVBP7QizZ23pMzhBaa9tAOmBnFbAYHQIM0Da2BIm4oh9Eo"
+def get_uid(p_url):
+    url="http://api01.idataapi.cn:8000/profile/weibo"
+    params = {
+        'pageToken': '1',
+        'type': '1',
+        #'url': 'https://weibo.com/chcedo',
+        'url': p_url,
+        'apikey': 'GcqZA9GII0aGoyx83eOVBP7QizZ23pMzhBaa9tAOmBnFbAYHQIM0Da2BIm4oh9Eo'
+    }
     headers = {
-    "Accept-Encoding": "gzip",
-    "Connection": "close"
+        'Accept-Encoding': 'gzip',
+        'Connection': 'close'
     }
 
-    r = requests.get(url, headers=headers)
-    json_obj = r.json()
-    return json_obj
+    return requests.get(url, params=params, headers=headers).json()['data'][0]
