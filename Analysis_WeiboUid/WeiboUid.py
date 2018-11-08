@@ -47,7 +47,7 @@ def handler(event, context):
 
     write_to_file(uid_list, uid_list_file, 'w')
 
-    bucket.put_object(bucketname+'/configuration/weibo_uid_list', uid_list_file)
+    bucket.put_object('configuration/weibo_uid_list', uid_list_file)
 
     user_list = ['leo.zhai@bizfocus.cn']
     sub = "现在时间： " + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
