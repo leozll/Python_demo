@@ -10,7 +10,7 @@ from retrying import retry
 def retry_if_result_none(result):
     #return "error" in result
     return result["retcode"]!="000000"
-@retry(retry_on_result=retry_if_result_none, wait_fixed=1500, stop_max_attempt_number=3)
+@retry(retry_on_result=retry_if_result_none, wait_fixed=1500, stop_max_attempt_number=2)
 
 def weibo_profile(p_kw):
     print (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'"'+ p_kw + '"解析中...')

@@ -12,7 +12,7 @@ from func.func_ossread import *
 from func.func_ossappend import *
 from func.func_ossput import *
 from func.func_ossget import *
-
+from func.func_sendmail import *
 
 def handler(event, context):
     logger = logging.getLogger()
@@ -53,17 +53,18 @@ def handler(event, context):
         return -1
     else:
         # continue  from the last status
-        brand_list = brand_list.split("\r\n")[analysis_start - 1:analysis_start + analysis_count]
-        if len(brand_list)==0:
-            logger.info(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' analysis is finished...')
+        analysis_list = brand_list.split("\r\n")[analysis_start - 1:analysis_start + analysis_count]
+        if len(analysis_list)==0:
+            logger.info(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' No keyword is to be analysed...')
             return 1
         else:
-            logger.info(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' starting '+str(analysis_start - 1)+'-'+str(analysis_start + analysis_count-1)+'...')
-        for brnd_kw in brand_list:
+            logger.info(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' starting '+str(analysis_start)+'-'+str(analysis_start + analysis_count-1)+'...')
+        for brnd_kw in analysis_list:
             # if the response is not abnormal
             profile_info = []
             profile_info.append(brnd_kw)
             try:
+                time.sleep(1)
                 profile_j = weibo_profile(brnd_kw)
                 if profile_j["retcode"] != "000000":
                     print (profile_j)
@@ -72,6 +73,7 @@ def handler(event, context):
                         datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '"' + brnd_kw + '"不存在!!!...：' + str(
                             profile_j['message']))
                 else:
+                    logger.info(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' starting to analyse ' + brnd_kw + '...')
                     # extract the first search result
                     profile = profile_j['data'][0]
 
@@ -101,27 +103,31 @@ def handler(event, context):
                     # dict has no sequence
                     # for v in profile.values():
                     #    profile_info.append(v)
-            except Exception  as e:
-                logger.info(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '"' + brnd_kw + '"解析失败????...：' + str(e))
 
-            with open(tmp_profile_list, 'a', newline='') as csv_file:
-                csv_writer = csv.writer(csv_file)
-                csv_writer.writerow(profile_info)
+                with open(tmp_profile_list, 'a', newline='') as csv_file:
+                    csv_writer = csv.writer(csv_file)
+                    csv_writer.writerow(profile_info)
+
+            except Exception  as e:
+                profile_info.append(str(e))
+                logger.info(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '"' + brnd_kw + '"解析失败????...：' + str(e))
 
 
 
         # oss_put(context, region, bucketname, oss_profile_list, tmp_profile_list)
         oss_putfile(context, region, bucketname, oss_profile_list, tmp_profile_list)
         oss_putobject(context, region, bucketname, oss_status, str(analysis_start + analysis_count))
+        logger.info(
+            datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' finish ' + str(analysis_start) + '-' + str(
+                analysis_start + analysis_count - 1) + '...')
 
-        user_list = ['leo.zhai@bizfocus.cn']
-
-
-sub = "现在时间： " + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-content = "该吃午饭了！！"
-print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' Start to send mail!')
-# send_mail(user_list, sub, content)
-
+        if analysis_start + analysis_count - len(brand_list.split("\r\n")) < analysis_count and analysis_start + analysis_count >= len(brand_list.split("\r\n")):
+            logger.info(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' last keywords are analysed...')
+            sub = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' last keywords are analysed...'
+            content = "All the keywords are analysed！！"
+            user_list = ['leo.zhai@bizfocus.cn']
+            print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' Start to send finish mail!')
+            send_mail(user_list, sub, conten)
 
 if __name__ == "__main__":
     handler('1', '2')
