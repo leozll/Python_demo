@@ -14,14 +14,14 @@ def retry_if_result_none(result):
 
 def weibo_content(uid,d):
 
-    print (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'"'+ p_kw + '"解析中...')
-    url="http://api01.idataapi.cn:8000/profile/weibo"
+    print (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'"'+ uid + '"解析中...')
+    url="http://api01.idataapi.cn:8000/post/weibo"
     params = {
-        'pageToken': '1',
+        #'pageToken': '1',
         'type': 'all',
         #'kw': p_kw,
-        'uid': uid
-        'date': d
+        'uid': uid,
+        'date': d,
         'apikey': 'GcqZA9GII0aGoyx83eOVBP7QizZ23pMzhBaa9tAOmBnFbAYHQIM0Da2BIm4oh9Eo'
     }
     headers = {

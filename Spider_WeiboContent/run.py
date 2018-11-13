@@ -24,6 +24,7 @@ html = requests.get(url, cookies = cookie).content
 print (u'user_id和cookie读入成功')
 selector = etree.HTML(html)
 pageNum = (int)(selector.xpath('//input[@name="mp"]')[0].attrib['value'])
+pageNum=10
 
 result = ""
 urllist_set = set()
