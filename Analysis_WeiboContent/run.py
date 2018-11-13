@@ -17,7 +17,7 @@ from func.func_nosql import *
 
 
 def handler(event, context):
-    uid_count = 60
+    uid_count = 70
     d_list = [201811]
 
     runtime_duration = 550
@@ -42,6 +42,7 @@ def handler(event, context):
     instance_name = 'leonosql'
     ts_log = 'table_store.log'
     tbl = 'log_weibo'
+    err_tbl = 'log_weibo_error'
     # ts_endpoint = 'https://leonosql.cn-shanghai.ots.aliyuncs.com'
     ts_region = 'cn-shanghai.ots'
     ts_endpoint = 'https://{0}.{1}.aliyuncs.com'.format(instance_name, ts_region)
@@ -68,7 +69,7 @@ def handler(event, context):
         logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
             '%Y-%m-%d %H:%M:%S') + ' ERROR!!! cant find uids file from oss')
         exit(1)
-    # uids=["1321603287"]
+    uids=["1077328234"]
 
     # initialize the uids
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
@@ -206,6 +207,8 @@ def handler(event, context):
                         content_list.append('')
                         content_list.append('')
                         content_list.append('')
+                    content_list.append((datetime.datetime.utcnow() + datetime.timedelta(
+                            hours=8)))
                     with open(tmp_content_list, 'a', newline='') as csv_file:
                         csv_writer = csv.writer(csv_file)
                         csv_writer.writerow(content_list)
@@ -217,6 +220,12 @@ def handler(event, context):
                         time.sleep(1 - ((datetime.datetime.utcnow() + datetime.timedelta(
                             hours=8)) - loop_starttime).microseconds / 1000)
             except Exception  as e:
+                pk = [('uid', int(uids[i])), ('datekey', datekey_uid)]
+                attr = [('error_log', str(e)), ('update_timestamp',
+                                                    (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
+                                                        '%Y-%m-%d %H:%M:%S')),
+                            ('update_time', int(time.time()))]
+                put_row(ots_client, err_tbl, pk, attr)
                 logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
                     '%Y-%m-%d %H:%M:%S') + '"' + str(uids[i]) + '"解析失败????...：' + str(e))
 
@@ -229,13 +238,13 @@ def handler(event, context):
             (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
                 ('update_time', int(time.time()))]
         put_row(ots_client, tbl, pk, attr)
-    # if fi nished
-    pk = [('uid', datekey_uid)]
-    attr = [('name', datekey_uid), ('status', ','.join(uids)), (
-        'update_timestamp', (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
-            ('update_time', int(time.time())),
-            ('checkpoint', checkpoint + uid_count)]
-    put_row(ots_client, tbl, pk, attr)
+        # if fi nished
+        pk = [('uid', datekey_uid)]
+        attr = [('name', datekey_uid), ('status', ','.join(uids)), (
+            'update_timestamp', (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
+                ('update_time', int(time.time())),
+                ('checkpoint', checkpoint + i + 1)]
+        put_row(ots_client, tbl, pk, attr)
 
     # pk=[('uid',100)]
     # attr = [('name', 'leo'), ('status', 'running'),('money',2000)]
