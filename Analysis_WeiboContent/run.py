@@ -69,7 +69,7 @@ def handler(event, context):
         logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
             '%Y-%m-%d %H:%M:%S') + ' ERROR!!! cant find uids file from oss')
         exit(1)
-    uids=["1077328234"]
+    #uids=["1077328234"]
 
     # initialize the uids
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
@@ -96,16 +96,16 @@ def handler(event, context):
     last_runtimestamp = (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
     # if no last runtime status record, initialize
     if get_col(ots_client, tbl, pk, ['update_time'], None) == 'NoData':
-        attr = [('name', datekey_uid), ('status', ','.join(uids)), ('update_timestamp', last_runtimestamp),
+        attr = [('name', ','.join(uids)), ('status', 'running'), ('update_timestamp', last_runtimestamp),
                 ('update_time', last_runtime),
                 ('checkpoint', checkpoint)]
         put_row(ots_client, tbl, pk, attr)
     else:
-        cols = ['status']
+        cols = ['name']
         # check if the weibo uids is changed, if not same
         if get_col(ots_client, tbl, pk, cols, None) != ','.join(uids):
             # initialize
-            attr = [('name', datekey_uid), ('status', ','.join(uids)), ('update_timestamp', last_runtimestamp),
+            attr = [('name', ','.join(uids)), ('status', 'running'), ('update_timestamp', last_runtimestamp),
                     ('update_time', last_runtime),
                     ('checkpoint', checkpoint)]
             put_row(ots_client, tbl, pk, attr)
@@ -119,9 +119,14 @@ def handler(event, context):
     # loop uid to analysis
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
         '%Y-%m-%d %H:%M:%S') + ' Step 4 : start to analysis weibo content')
-    if checkpoint > len(uids) and get_col(ots_client, tbl, pk, ['name'], None) == datekey_uid:
-        logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
-            '%Y-%m-%d %H:%M:%S') + ' Step 5 : today all the uids are analysed! exit the script!')
+    if checkpoint > len(uids) and get_col(ots_client, tbl, pk, ['update_timestamp'], None)[0:10].replace('-','') == str(datekey_uid):
+        pk = [('uid', datekey_uid)]
+        attr = [('name', ','.join(uids)), ('status', 'finish'), (
+            'update_timestamp', (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
+                ('update_time', int(time.time())),
+                ('checkpoint', i + 1)]
+        put_row(ots_client, tbl, pk, attr)
+        logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 5 : today all the uids are analysed! exit the script! date: '+str(datekey_uid)+' | checkpoint: '+str(checkpoint))
         exit(0)
     if checkpoint + uid_count > len(uids):
         endp = len(uids)
@@ -129,7 +134,7 @@ def handler(event, context):
         endp = checkpoint + uid_count
     for i in range(checkpoint, endp):
         logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
-            '%Y-%m-%d %H:%M:%S') + ' Step 5 (' + str(i + 1) + '/' + str(uid_count) + ') : start to analyse uid: ' +
+            '%Y-%m-%d %H:%M:%S') + ' Step 5 (' + str(i + 1) + '/' + str(endp) + ') : start to analyse uid: ' +
                     uids[i])
         for d in d_list:
 
@@ -141,7 +146,7 @@ def handler(event, context):
                     bucket.put_object_from_file(oss_content_list, tmp_content_list)
                 # if finished
                 pk = [('uid', int(uids[i]))]
-                attr = [('name', int(uids[i])), ('status', 'finish'), (
+                attr = [('name', uids[i]), ('status', 'finish'), (
                     'update_timestamp',
                     (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
                         ('update_time', int(time.time()))]
@@ -149,7 +154,7 @@ def handler(event, context):
                 # if fi nished
                 pk = [('uid', datekey_uid)]
                 # overtime - update checkpoint to checkpoint+i
-                attr = [('name', datekey_uid), ('status', ','.join(uids)), (
+                attr = [('name', ','.join(uids)), ('status', 'running'), (
                     'update_timestamp',
                     (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
                         ('update_time', int(time.time())),
@@ -177,41 +182,42 @@ def handler(event, context):
 
                 else:
                     print(' starting to write ' + str(uids[i]) + '...')
-                    content = content_j['data'][0]
-                    content_list.append(content['id'])  # 文章id
-                    content_list.append(content['url'])  # 文章链接
-                    content_list.append(content['publishDateStr'].replace("T", " "))  # 发布时间／北京时间
-                    # content_list.append(content['edit_at'])  # 最后编辑时间
-                    content_list.append(content['shareCount'])  # 转发数
-                    content_list.append(content['commentCount'])  # 评论数
-                    content_list.append(content['likeCount'])  # 点赞数
-                    content_list.append(content['content'].replace("\n", ""))  # 文章内容
-                    if content['imageURLs'] is not None:
-                        content_list.append(';'.join(content['imageURLs']))  # 图片链接
-                    else:
-                        content_list.append('')
-                    if 'retweeted_status' in content['mblog']:
-                        content_list.append(content['mblog']['retweeted_status']['user']['id'])  # 转发作者uid
-                        content_list.append(content['mblog']['retweeted_status']['id'])  # 转发文章id
-                        content_list.append(content['mblog']['retweeted_status']['created_at'])  # 转发文章发布时间
-                        content_list.append(content['mblog']['retweeted_status']['text'].replace("\n", ""))  # 转发内容
-                        if content['mblog']['retweeted_status']['pic_urls'] is not None:
-                            if content['mblog']['retweeted_status']['pic_urls'] != []:
-                                content_list.append(';'.join(
-                                    list(content['mblog']['retweeted_status']['pic_urls'][0].values())))  # 转发内容图片
+                    #content = content_j['data'][0]
+                    for content in content_j['data']:
+                        content_list.append(content['id'])  # 文章id
+                        content_list.append(content['url'])  # 文章链接
+                        content_list.append(content['publishDateStr'].replace("T", " "))  # 发布时间／北京时间
+                        # content_list.append(content['edit_at'])  # 最后编辑时间
+                        content_list.append(content['shareCount'])  # 转发数
+                        content_list.append(content['commentCount'])  # 评论数
+                        content_list.append(content['likeCount'])  # 点赞数
+                        content_list.append(content['content'].replace("\n", ""))  # 文章内容
+                        if content['imageURLs'] is not None:
+                            content_list.append(';'.join(content['imageURLs']))  # 图片链接
                         else:
                             content_list.append('')
-                    else:
-                        content_list.append('')
-                        content_list.append('')
-                        content_list.append('')
-                        content_list.append('')
-                        content_list.append('')
-                    content_list.append((datetime.datetime.utcnow() + datetime.timedelta(
-                            hours=8)))
-                    with open(tmp_content_list, 'a', newline='') as csv_file:
-                        csv_writer = csv.writer(csv_file)
-                        csv_writer.writerow(content_list)
+                        if 'retweeted_status' in content['mblog']:
+                            content_list.append(content['mblog']['retweeted_status']['user']['id'])  # 转发作者uid
+                            content_list.append(content['mblog']['retweeted_status']['id'])  # 转发文章id
+                            content_list.append(content['mblog']['retweeted_status']['created_at'])  # 转发文章发布时间
+                            content_list.append(content['mblog']['retweeted_status']['text'].replace("\n", ""))  # 转发内容
+                            if content['mblog']['retweeted_status']['pic_urls'] is not None:
+                                if content['mblog']['retweeted_status']['pic_urls'] != []:
+                                    content_list.append(';'.join(
+                                        list(content['mblog']['retweeted_status']['pic_urls'][0].values())))  # 转发内容图片
+                            else:
+                                content_list.append('')
+                        else:
+                            content_list.append('')
+                            content_list.append('')
+                            content_list.append('')
+                            content_list.append('')
+                            content_list.append('')
+                        content_list.append((datetime.datetime.utcnow() + datetime.timedelta(
+                                hours=8)))
+                        with open(tmp_content_list, 'a', newline='') as csv_file:
+                            csv_writer = csv.writer(csv_file)
+                            csv_writer.writerow(content_list)
                     if ((datetime.datetime.utcnow() + datetime.timedelta(
                             hours=8)) - loop_starttime).microseconds < 1000:
                         print('toooooo fast!!! sleep ' + str(
@@ -219,8 +225,9 @@ def handler(event, context):
                                 hours=8)) - loop_starttime).microseconds / 1000) + ' microseconds......')
                         time.sleep(1 - ((datetime.datetime.utcnow() + datetime.timedelta(
                             hours=8)) - loop_starttime).microseconds / 1000)
-            except Exception  as e:
+            except Exception as e:
                 pk = [('uid', int(uids[i])), ('datekey', datekey_uid)]
+                print (str(e))
                 attr = [('error_log', str(e)), ('update_timestamp',
                                                     (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
                                                         '%Y-%m-%d %H:%M:%S')),
@@ -233,25 +240,18 @@ def handler(event, context):
             bucket.put_object_from_file(oss_content_list, tmp_content_list)
         # if finished
         pk = [('uid', int(uids[i]))]
-        attr = [('name', int(uids[i])), ('status', 'finish'), (
+        attr = [('name', uids[i]), ('status', 'finish'), (
             'update_timestamp',
             (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
                 ('update_time', int(time.time()))]
         put_row(ots_client, tbl, pk, attr)
-        # if fi nished
+        # if finished
         pk = [('uid', datekey_uid)]
-        attr = [('name', datekey_uid), ('status', ','.join(uids)), (
+        attr = [('name', ','.join(uids)), ('status', 'running'), (
             'update_timestamp', (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
                 ('update_time', int(time.time())),
-                ('checkpoint', checkpoint + i + 1)]
+                ('checkpoint', i + 1)]
         put_row(ots_client, tbl, pk, attr)
-
-    # pk=[('uid',100)]
-    # attr = [('name', 'leo'), ('status', 'running'),('money',2000)]
-    # list_table(ots_client)
-    # put_row(ots_client,tbl,pk,attr)
-    # cols = ['status']
-    # print (get_log_status(ots_client, tbl, pk, cols,SingleColumnCondition("status", 'running1', ComparatorType.EQUAL)))
 
 
 if __name__ == "__main__":
