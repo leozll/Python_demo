@@ -73,7 +73,7 @@ def handler(event, context):
     content_list.append(content['id'])  # 文章id
     content_list.append(content['url'])  # 文章链接
     content_list.append(content['mblog']['localPublishDateStr'])  # 发布时间／北京时间
-    if content_list.has_key('edit_at'):
+    if 'edit_at' in content:
         content_list.append(content['edit_at'])  # 最后编辑时间
     else:
         content_list.append('')
@@ -114,7 +114,7 @@ def handler(event, context):
     csv_file = json_key.replace('json','csv')
 
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 3: unload result to ' + csv_file )
-    bucket.put_object(csv_file, content_list)
+    bucket.put_object(csv_file, str(content_list))
     pk = [('datekey', datekey_uid), ('jsonkey', json_key)]
     attr = [('name', json_key),
             ('length', content_length),
@@ -123,7 +123,9 @@ def handler(event, context):
             ('update_timestamp',(datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
             ('update_time', int(time.time()))]
     put_row(ots_client, tbl, pk, attr)
+    logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 4: ' + csv_file +' is ready!')
 
+    return 'Congratulations! ' + (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
 
 if __name__ == "__main__":
     handler('1', '2')
