@@ -16,7 +16,7 @@ from func.func_nosql import *
 
 def handler(event, context):
     evt = json.loads(event)
-    print(evt)
+    #print(evt)
     datekey_uid = int((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y%m%d'))
     oss_json_path = "result/weibo_json/"
     oss_csv_path = "result/weibo_csv/"
