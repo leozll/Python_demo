@@ -67,13 +67,13 @@ def handler(event, context):
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 2: start to parse ' + json_key )
 
     #read the file
-    print (bucket.get_object(json_key).read().decode('utf-8'))
-    content = json.loads(bucket.get_object(json_key).read().decode('utf-8').replace("'", "\""))
+    #print (bucket.get_object(json_key).read().decode('utf-8'))
+    content = eval(bucket.get_object(json_key).read().decode('utf-8'))
     content_list = []
     content_list.append(content['id'])  # 文章id
     content_list.append(content['url'])  # 文章链接
     content_list.append(content['mblog']['localPublishDateStr'])  # 发布时间／北京时间
-    if content['edit_at'] is not None:
+    if content_list.has_key('edit_at'):
         content_list.append(content['edit_at'])  # 最后编辑时间
     else:
         content_list.append('')
