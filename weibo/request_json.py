@@ -110,7 +110,7 @@ def handler(event, context):
 
     #loop current run
     for i in range(checkpoint, endp):
-        logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 5 (' + str(i + 1) + '/' + str(endp + 1) + ') : start to analyse uid: ' + uids[i])
+        logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 5 (' + str(i + 1) + '/' + str(endp) + ') : start to analyse uid: ' + uids[i])
         request_status = ''
         #loop the months
         for d in d_list:
