@@ -18,8 +18,9 @@ def handler(event, context):
     evt = json.loads(event)
     #print(evt)
     datekey_uid = int((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y%m%d'))
-    oss_json_path = "result/weibo_json/"
-    oss_csv_path = "result/weibo_csv/"
+    oss_json_path = "process/weibo_json/"
+    oss_csv_path = "process/weibo_csv/"
+    oss_json_result = "result/weibo_json/"
 
     logger = logging.getLogger()
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + '--------------------------------------------------------------------------------------')
@@ -68,7 +69,8 @@ def handler(event, context):
 
     #read the file
     #print (bucket.get_object(json_key).read().decode('utf-8'))
-    content = eval(bucket.get_object(json_key).read().decode('utf-8'))
+    content_str = bucket.get_object(json_key).read().decode('utf-8')
+    content = eval(content_str)
     content_list = []
     content_list.append(content['id'])  # 文章id
     content_list.append(content['url'])  # 文章链接
@@ -114,7 +116,14 @@ def handler(event, context):
     csv_file = json_key.replace('json','csv')
 
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 3: unload result to ' + csv_file )
+    #unload the csv file
     bucket.put_object(csv_file, str(content_list))
+    result_json = json_key.replace('process', 'result')
+    # copy json file from process to result
+    bucket.put_object(result_json, content_str)
+    # delete process json file
+    bucket.delete_object(json_key)
+
     pk = [('datekey', datekey_uid), ('jsonkey', json_key)]
     attr = [('name', json_key),
             ('length', content_length),
@@ -122,6 +131,7 @@ def handler(event, context):
             ('status', 'finish'),
             ('update_timestamp',(datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
             ('update_time', int(time.time()))]
+    #update log
     put_row(ots_client, tbl, pk, attr)
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 4: ' + csv_file +' is ready!')
 

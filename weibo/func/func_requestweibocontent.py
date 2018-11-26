@@ -10,7 +10,7 @@ from retrying import retry
 def retry_if_result_none(result):
     #return "error" in result
     print (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+' retcode is ' + str(result["retcode"]) + '......')
-    return result["retcode"]!="000000"
+    return result["retcode"]!="000000" and result["retcode"]!="100002"
 @retry(retry_on_result=retry_if_result_none, wait_fixed=1500, stop_max_attempt_number=2)
 
 def weibo_content(uid,d,p):

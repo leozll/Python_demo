@@ -13,19 +13,17 @@ from func.func_nosql import *
 
 
 def handler(event, context):
-    uid_count = 20
-    d_list = [201811]
+    uid_count = 100
+    d_list = [201801,201802,201803,201804,201805]
+    #d_list = [201801,201802,201803,201804,201805,201806,201807,201808,201809,201810,201811]
+    user_list = ['leo.zhai@bizfocus.cn']
 
-
-    runtime_duration = 550
     tmpdir = '/tmp/weibo/'
-    tmp_content_list = tmpdir + 'weibo_content_list.csv'
-
     # oss
     region = "cn-hangzhou-internal"
     bucketname = "leo-hangzhou"
     oss_uid_list = "configuration/weibo_uid_list"
-    oss_json_path = "result/weibo_json/"
+    oss_json_path = "process/weibo_json/"
 
     #table storehang'zhou
     instance_name = 'leo-ts-hangzhou'
@@ -37,7 +35,6 @@ def handler(event, context):
     access_key_id = 'LTAIi3mUQglhfB3D'
     access_key_secret = 'y4acQJO0QkoCbaPipQDFD2idfNOVqJ'
 
-    runtime_start = (datetime.datetime.utcnow() + datetime.timedelta(hours=8))
     datekey_uid = int((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y%m%d'))
     os.system("rm -rf /tmp/*")
     os.mkdir(tmpdir)
@@ -64,7 +61,7 @@ def handler(event, context):
     else:
         logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' ERROR!!! cant find uids file from oss')
         exit(1)
-    uids=["1817559703"]
+    #uids=["1817559703"]
 
     # initialize the uids
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 2 : initialize the uids status')
@@ -86,25 +83,16 @@ def handler(event, context):
     last_runtime = int(time.time())
     last_runtimestamp = (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
     # if no last runtime status record, initialize
-    if get_col(ots_client, tbl, pk, ['update_time'], None) == 'NoData':
+    if get_col(ots_client, tbl, pk, ['update_time'], None) == 'NoData' or get_col(ots_client, tbl, pk, ['status'], None) != ','.join(uids):
         attr = [('name', datekey_uid), ('status', ','.join(uids)),
                 ('update_timestamp', last_runtimestamp),
                 ('update_time', last_runtime),
                 ('checkpoint', checkpoint)]
         put_row(ots_client, tbl, pk, attr)
-    else:
-        # if the uids list is changed, initialize the log table
-        if get_col(ots_client, tbl, pk, ['status'], None) != ','.join(uids):
-            # initialize
-            attr = [('name', datekey_uid), ('status', ','.join(uids)),
-                    ('update_timestamp', last_runtimestamp),
-                    ('update_time', last_runtime),
-                    ('checkpoint', checkpoint)]
-            put_row(ots_client, tbl, pk, attr)
         #if no change, get the last checkpoint
-        else:
-            cols = ['checkpoint']
-            checkpoint = get_col(ots_client, tbl, pk, cols, None)
+    else:
+        cols = ['checkpoint']
+        checkpoint = get_col(ots_client, tbl, pk, cols, None)
     logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' last runtime checkpoint is ' + str(checkpoint))
 
     # loop uid to analysis
@@ -122,11 +110,13 @@ def handler(event, context):
 
     #loop current run
     for i in range(checkpoint, endp):
-        logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 5 (' + str(i + 1) + '/' + str(i + 1 + uid_count) + ') : start to analyse uid: ' + uids[i])
+        logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 5 (' + str(i + 1) + '/' + str(endp + 1) + ') : start to analyse uid: ' + uids[i])
         request_status = ''
         #loop the months
         for d in d_list:
             try:
+                logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime(
+                    '%Y-%m-%d %H:%M:%S') + ' Step 5.1 start to analyse uid: ' + uids[i] + ' date: ' + str(d))
                 loop_starttime = (datetime.datetime.utcnow() + datetime.timedelta(hours=8))
                 # get the weibo content
                 request_page = 1
@@ -159,8 +149,8 @@ def handler(event, context):
                         ('update_timestamp',(datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
                         ('update_time', int(time.time()))]
                 put_row(ots_client, err_tbl, pk, attr)
-                logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + '"' + str(uids[i]) + '"解析失败????...：' + str(e))
-
+                logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + '"' + str(uids[i]) + ' ' + str(d) +' "解析失败????...：' + str(e))
+            time.sleep(1)
         # if finished
         pk = [('uid', int(uids[i]))]
         attr = [('name', int(uids[i])),
@@ -174,9 +164,17 @@ def handler(event, context):
                 ('status', ','.join(uids)),
                 ('update_timestamp', (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')),
                 ('update_time', int(time.time())),
-                ('checkpoint', checkpoint + i + 1)]
+                ('checkpoint', i)]
         put_row(ots_client, tbl, pk, attr)
 
+    #sub = str(len(uids)) + ' uids are requested finished! pls check the log?'
+    #content = 'log link : XXXXX?'
+    #send_mail(user_list, sub, content)
+    if checkpoint >= len(uids) and get_col(ots_client, tbl, pk, ['name'], None) == datekey_uid:
+        logger.info((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S') + ' Step 6 :  all the uids are analysed today! exit the script! (checkpoint:' + str(checkpoint) + ' totally:' + str(len(uids)) + ')')
+        sub = str(len(uids)) + ' uids are requested finished! pls check the log?'
+        content = 'log link : XXXXX?'
+        send_mail(user_list, sub, content)
     return 'Congratulations! ' + (datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
 if __name__ == "__main__":
     handler('1', '2')
