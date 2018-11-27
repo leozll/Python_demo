@@ -72,6 +72,7 @@ def handler(event, context):
     content_str = bucket.get_object(json_key).read().decode('utf-8')
     content = eval(content_str)
     content_list = []
+    content_list.append(content['from']['id'])  # uid
     content_list.append(content['id'])  # 文章id
     content_list.append(content['url'])  # 文章链接
     content_list.append(content['mblog']['localPublishDateStr'])  # 发布时间／北京时间
@@ -82,7 +83,7 @@ def handler(event, context):
     content_list.append(content['shareCount'])  # 转发数
     content_list.append(content['commentCount'])  # 评论数
     content_list.append(content['likeCount'])  # 点赞数
-    content_list.append(content['content'].replace("\n", ""))  # 文章内容
+    content_list.append(content['content'].replace("\n", "").replace(",", "，"))  # 文章内容
     content_list.append(content['mblog']['source'])  # 来自
     if content['imageURLs'] is not None:
         content_list.append(';'.join(content['imageURLs']))  # 图片链接
@@ -92,7 +93,7 @@ def handler(event, context):
         content_list.append(content['mblog']['retweeted_status']['user']['id'])  # 转发作者uid
         content_list.append(content['mblog']['retweeted_status']['id'])  # 转发文章id
         content_list.append(content['mblog']['retweeted_status']['created_at'])  # 转发文章发布时间
-        content_list.append(content['mblog']['retweeted_status']['text'].replace("\n", ""))  # 转发内容
+        content_list.append(content['mblog']['retweeted_status']['text'].replace("\n", "").replace(",", "，"))  # 转发内容
         content_list.append(content['mblog']['retweeted_status']['reposts_count'])  # 转发文章转发数
         content_list.append(content['mblog']['retweeted_status']['comments_count'])  # 转发文章评论数
         content_list.append(content['mblog']['retweeted_status']['attitudes_count'])  # 转发文章点赞数
@@ -110,8 +111,7 @@ def handler(event, context):
         content_list.append('')
         content_list.append('')
         content_list.append('')
-    content_list.append((datetime.datetime.utcnow() + datetime.timedelta(
-        hours=8)))
+    content_list.append((datetime.datetime.utcnow() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S'))
 
     csv_file = json_key.replace('json','csv')
 
