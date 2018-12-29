@@ -9,7 +9,7 @@ from retrying import retry
 #stop_max_attempt_number：用来设定最大的尝试次数，超过该次数就停止重试
 def retry_if_result_none(result):
     #return "error" in result
-    return result["retcode"]!="000000"
+    return result["retcode"]!="000000" and result["retcode"]!="100002"
 @retry(retry_on_result=retry_if_result_none, wait_fixed=1500, stop_max_attempt_number=2)
 
 def weibo_profile(p_kw):

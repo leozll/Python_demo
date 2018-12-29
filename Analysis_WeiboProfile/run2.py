@@ -62,12 +62,21 @@ def handler(event, context):
         for brnd_kw in analysis_list:
             # if the response is not abnormal
             profile_info = []
-
+            profile_info.append(brnd_kw)
             try:
                 time.sleep(1)
                 profile_j = weibo_profile(brnd_kw)
-                for profile in profile_j['data']:
+                if profile_j["retcode"] != "000000":
+                    print (profile_j)
                     profile_info.append(brnd_kw)
+                    logger.info(
+                        datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '"' + brnd_kw + '"不存在!!!...：' + str(
+                            profile_j['message']))
+                else:
+                    logger.info(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' starting to analyse ' + brnd_kw + '...')
+                    # extract the first search result
+                    profile = profile_j['data'][0]
+
                     profile_info.append(profile['id'])
                     profile_info.append(profile['url'])
                     profile_info.append(profile['idVerifiedInfo'].replace("\n", ""))
@@ -95,9 +104,9 @@ def handler(event, context):
                     # for v in profile.values():
                     #    profile_info.append(v)
 
-                    with open(tmp_profile_list, 'a', newline='') as csv_file:
-                        csv_writer = csv.writer(csv_file)
-                        csv_writer.writerow(profile_info)
+                with open(tmp_profile_list, 'a', newline='') as csv_file:
+                    csv_writer = csv.writer(csv_file)
+                    csv_writer.writerow(profile_info)
 
             except Exception  as e:
                 profile_info.append(str(e))
@@ -118,7 +127,7 @@ def handler(event, context):
             content = "All the keywords are analysed！！"
             user_list = ['leo.zhai@bizfocus.cn']
             print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ' Start to send finish mail!')
-            send_mail(user_list, sub, content)
+            send_mail(user_list, sub, conten)
 
 if __name__ == "__main__":
     handler('1', '2')

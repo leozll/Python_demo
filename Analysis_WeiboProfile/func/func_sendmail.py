@@ -19,7 +19,7 @@ email_host = "smtp.163.com"
 send_user = "zllongtw@163.com"
 
 def send_mail(user_list, sub, content):
-    user = "猜猜我是谁" + "<" + send_user + ">"
+    user = "lambda" + "<" + send_user + ">"
     message = MIMEText(content, _subtype='plain', _charset='utf-8')
     message['Subject'] = sub
     message['From'] = user
